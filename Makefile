@@ -4,4 +4,7 @@ build:
 	$(DOCKER) cargo build
 
 run:
-	$(DOCKER) cargo run
+	$(DOCKER) cargo run main.elf
+
+clean:
+	$(DOCKER) cargo clean
