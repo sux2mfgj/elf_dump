@@ -3,6 +3,9 @@ DOCKER  := docker run --rm --user "$(id -u)":"$(id -g)" --env USER=$$USER --env 
 build:
 	$(DOCKER) cargo build
 
+release:
+	$(DOCKER) cargo build --release
+
 run:
 	$(DOCKER) cargo run main.elf
 
