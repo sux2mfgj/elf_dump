@@ -22,12 +22,7 @@ fn main() {
             Some(s) => s,
             None    => panic!("cannot found .text section"),
         };
-    let data_section =
-        match file.get_section(".data")
-        {
-            Some(s) => s,
-            None    => panic!("cannot found .data section"),
-        };
+
 
     /* let mut current_addr = 0; */
 
@@ -44,6 +39,16 @@ fn main() {
         /* println!("{:08x} {:02x}", current_addr, data); */
         /* current_addr += 1; */
     }
+
+    if file.get_section(".data").is_none() {
+        return
+    }
+
+    let data_section = match file.get_section(".data")
+        {
+            Some(s) => s,
+            None    => panic!("??"),
+        };
 
     let diff_text_data = data_section.shdr.addr
         - (text_section.shdr.addr + text_section.shdr.size);
