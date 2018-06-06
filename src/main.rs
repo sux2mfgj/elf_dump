@@ -2,67 +2,67 @@ extern crate elf;
 
 use std::path::PathBuf;
 use std::env;
+use std::io::{BufWriter, Write};
+use std::fs;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<String> = env::args().skip(1).collect();
 
     if args.len() < 2 {
         panic!("not enough argument");
     }
-    let path = PathBuf::from(&args[1]);
+    let path = PathBuf::from(&args[0]);
+    println!("{}", &args[1]);
+    let base_addr = u64::from_str_radix(&args[1], 16);
 
     let file = match elf::File::open_path(&path) {
         Ok(f) => f,
         Err(e) => panic!("Error: {:?}", e),
     };
 
-    let text_section =
-        match file.get_section(".text")
-        {
-            Some(s) => s,
-            None    => panic!("cannot found .text section"),
+    /*
+    file.sections
+        .iter()
+        .for_each(|section|
+                if section.shdr.shtype == elf::types::SHT_PROGBITS
+                {
+                    println!("{}", section)
+                });
+                */
+    let mut mapping_sections :Vec<_> = file.sections
+                            .iter()
+                            .filter(|&section| section.shdr.shtype == elf::types::SHT_PROGBITS)
+                            .collect();
+
+    mapping_sections.sort_by(
+            |&sec_a, &sec_b| sec_a.shdr.addr.cmp(&sec_b.shdr.addr));
+
+    let mut current_addr = match base_addr {
+            Ok(n) => n,
+            Err(err) => panic!("error {}", err),
         };
 
+    //TODO args[0]とくっつける
+    //let f = fs::File::create("memory.hex").unwrap();
+    let f = fs::File::create(
+            format!("{}.hex", path.file_name().unwrap().to_str().unwrap())
+            ).unwrap();
+    let mut writer = BufWriter::new(f);
 
-    /* let mut current_addr = 0; */
-
-    for _ in 0..text_section.shdr.addr
+    for section in mapping_sections
     {
-        println!("00");
-        /* println!("{:08x} 00", current_addr); */
-        /* current_addr += 1; */
-    }
-
-    for d in &text_section.data
-    {
-        println!("{:02x}", d);
-        /* println!("{:08x} {:02x}", current_addr, data); */
-        /* current_addr += 1; */
-    }
-
-    if file.get_section(".data").is_none() {
-        return
-    }
-
-    let data_section = match file.get_section(".data")
+        println!("{}", section);
+        while current_addr < section.shdr.addr
         {
-            Some(s) => s,
-            None    => panic!("??"),
-        };
-
-    let diff_text_data = data_section.shdr.addr
-        - (text_section.shdr.addr + text_section.shdr.size);
-    for _ in 0..diff_text_data
-    {
-        println!("00");
-        /* println!("{:08x} 00", current_addr); */
-        /* current_addr += 1; */
-    }
-
-    for d in &data_section.data
-    {
-        println!("{:02x}", d);
-        /* println!("{:08x} {:02x}", current_addr, d); */
-        /* current_addr += 1; */
+            current_addr += 1;
+            println!("0x{:x} 00", current_addr);
+            write!(writer, "00\n").unwrap();
+        }
+        for byte in &section.data
+        {
+            current_addr += 1;
+            println!("0x{:x} {:02x}", current_addr, byte);
+            write!(writer, "{:02x}\n", byte).unwrap();
+        }
     }
 }
