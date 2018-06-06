@@ -7,7 +7,7 @@ release:
 	$(DOCKER) cargo build --release
 
 run:
-	$(DOCKER) cargo run main.elf
+	$(DOCKER) cargo run ./test_elf/rv32ui-p-add 80000000
 
 clean:
 	$(DOCKER) cargo clean

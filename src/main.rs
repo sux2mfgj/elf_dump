@@ -54,5 +54,5 @@ fn main() {
         }
     }
 
-    println!("size is 0x{:x}", current_addr);
+    println!("size is 0x{:x}", current_addr - base_addr.unwrap());
 }
