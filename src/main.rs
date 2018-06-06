@@ -12,7 +12,6 @@ fn main() {
         panic!("not enough argument");
     }
     let path = PathBuf::from(&args[0]);
-    println!("{}", &args[1]);
     let base_addr = u64::from_str_radix(&args[1], 16);
 
     let file = match elf::File::open_path(&path) {
@@ -20,15 +19,6 @@ fn main() {
         Err(e) => panic!("Error: {:?}", e),
     };
 
-    /*
-    file.sections
-        .iter()
-        .for_each(|section|
-                if section.shdr.shtype == elf::types::SHT_PROGBITS
-                {
-                    println!("{}", section)
-                });
-                */
     let mut mapping_sections :Vec<_> = file.sections
                             .iter()
                             .filter(|&section| section.shdr.shtype == elf::types::SHT_PROGBITS)
@@ -42,8 +32,6 @@ fn main() {
             Err(err) => panic!("error {}", err),
         };
 
-    //TODO args[0]とくっつける
-    //let f = fs::File::create("memory.hex").unwrap();
     let f = fs::File::create(
             format!("{}.hex", path.file_name().unwrap().to_str().unwrap())
             ).unwrap();
@@ -55,14 +43,16 @@ fn main() {
         while current_addr < section.shdr.addr
         {
             current_addr += 1;
-            println!("0x{:x} 00", current_addr);
+            //println!("0x{:x} 00", current_addr);
             write!(writer, "00\n").unwrap();
         }
         for byte in &section.data
         {
             current_addr += 1;
-            println!("0x{:x} {:02x}", current_addr, byte);
+            //println!("0x{:x} {:02x}", current_addr, byte);
             write!(writer, "{:02x}\n", byte).unwrap();
         }
     }
+
+    println!("size is 0x{:x}", current_addr);
 }
