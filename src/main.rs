@@ -39,6 +39,10 @@ fn main() {
 
     for section in mapping_sections
     {
+        if section.shdr.addr < current_addr
+        {
+            continue;
+        }
         println!("{}", section);
         while current_addr < section.shdr.addr
         {
